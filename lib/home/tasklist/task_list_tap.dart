@@ -5,6 +5,8 @@ import 'package:todo/home/tasklist/task_widget_item.dart';
 import 'package:todo/mytheme.dart';
 import 'package:todo/provider/app_config_provider.dart';
 
+import '../../provider/auth_provider.dart';
+
 class TaskListTap extends StatefulWidget {
   @override
   State<TaskListTap> createState() => _TaskListTapState();
@@ -14,6 +16,8 @@ class _TaskListTapState extends State<TaskListTap> {
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<AppConfigProvider>(context);
+    var authProvider = Provider.of<AuthProvider>(context);
+    provider.getAllTasksFromFireStore(authProvider.currentUser?.id ?? '');
     return Column(
       children: [
         CalendarTimeline(
@@ -21,7 +25,8 @@ class _TaskListTapState extends State<TaskListTap> {
           firstDate: DateTime.now().subtract(Duration(days: 365)),
           lastDate: DateTime.now().add(Duration(days: 365)),
           onDateSelected: (date) {
-            provider.changeSelectedDate(date);
+            provider.changeSelectedDate(
+                date, authProvider.currentUser?.id ?? "");
           },
           leftMargin: 20,
           monthColor: MyTheme.blackColor,

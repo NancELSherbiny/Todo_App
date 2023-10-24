@@ -1,11 +1,26 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo/FireBaseUtils.dart';
 import 'package:todo/auth/register_page/component/custom_text_form_field.dart';
 import 'package:todo/auth/register_page/register.dart';
+import 'package:todo/home/homepage.dart';
 
-class LoginPage extends StatelessWidget {
+import '../../Dialog_utils/dialog_utils.dart';
+import '../../provider/auth_provider.dart';
+
+class LoginPage extends StatefulWidget {
   static const String routeName = 'login';
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   var emailController = TextEditingController();
+
   var passController = TextEditingController();
+
   var formKey = GlobalKey<FormState>();
 
   @override
@@ -37,7 +52,7 @@ class LoginPage extends StatelessWidget {
                           return 'Please enter Email';
                         }
                         bool emailValid = RegExp(
-                                r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                             .hasMatch(text);
                         if (!emailValid) {
                           return 'Please enter valid email';
@@ -80,7 +95,7 @@ class LoginPage extends StatelessWidget {
                           width: MediaQuery.of(context).size.width * 0.2,
                         ),
                         Text(
-                          "'Don't have an account",
+                          "Don't have an account",
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                         TextButton(
@@ -89,7 +104,7 @@ class LoginPage extends StatelessWidget {
                                   .pushNamed(RegisterPage.routeName);
                             },
                             child: Text(
-                              'Sign in',
+                              'Sign up',
                               style: TextStyle(fontSize: 16),
                             ))
                       ],
@@ -102,7 +117,53 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  void login() {
-    if (formKey.currentState!.validate() == true) {}
+  void login() async {
+    if (formKey.currentState!.validate() == true) {
+      DialogUtils.showLoading(context, 'Loading...');
+      try {
+        final credential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+                email: emailController.text, password: passController.text);
+
+        var user = await FireBaseUtils.readUserFromFireStore(
+            credential.user?.uid ?? '');
+        if (user == null) {
+          return;
+        }
+
+        var authProvider = Provider.of<AuthProvider>(context, listen: false);
+        authProvider.updateUser(user);
+
+        DialogUtils.hideLoading(context);
+        DialogUtils.showMessage(context, 'Login Successfully',
+            title: 'Success',
+            positiveActionName: 'ok',
+            barrierDismissible: false, positiveAction: () {
+          Navigator.pushReplacementNamed(context, HomePage.routeName);
+        });
+        print(credential.user?.uid ?? '');
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          print('No user found for that email.');
+        } else if (e.code == 'wrong-password') {
+          print('Wrong password provided for that user.');
+        } else if (e.code == 'INVALID_LOGIN_CREDENTIALS') {
+          DialogUtils.hideLoading(context);
+          DialogUtils.showMessage(
+              context, 'wrong password or no user for that email',
+              title: 'Error',
+              positiveActionName: 'ok',
+              barrierDismissible: false);
+          print('wrong password or no user for that email');
+        }
+      } catch (e) {
+        DialogUtils.hideLoading(context);
+        DialogUtils.showMessage(context, e.toString(),
+            title: 'Error',
+            positiveActionName: 'ok',
+            barrierDismissible: false);
+        print(e);
+      }
+    }
   }
 }

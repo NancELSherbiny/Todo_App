@@ -40,9 +40,9 @@ class AppConfigProvider extends ChangeNotifier {
     return task?.isDone == true;
   }
 
-  void getAllTasksFromFireStore() async {
+  void getAllTasksFromFireStore(String uId) async {
     QuerySnapshot<Task> querySnapshot =
-        await FireBaseUtils.getTasksCollection().get();
+        await FireBaseUtils.getTasksCollection(uId).get();
     tasksList = querySnapshot.docs.map((doc) {
       return doc.data();
     }).toList();
@@ -63,9 +63,9 @@ class AppConfigProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changeSelectedDate(DateTime newDate) {
+  void changeSelectedDate(DateTime newDate, String uId) {
     selectedDate = newDate;
-    getAllTasksFromFireStore();
+    getAllTasksFromFireStore(uId);
     notifyListeners();
   }
 }

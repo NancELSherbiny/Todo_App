@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/Dialog_utils/dialog_utils.dart';
 import 'package:todo/FireBaseUtils.dart';
 import 'package:todo/mytheme.dart';
 import 'package:todo/provider/app_config_provider.dart';
+import 'package:todo/provider/auth_provider.dart';
 
 import '../../model/task.dart';
 
@@ -128,8 +130,16 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
       ///add task to firebase
       Task task =
           Task(title: title, description: description, dateTime: selectedDate);
-      FireBaseUtils.addTaskToFireStore(task)
-          .timeout(Duration(milliseconds: 500), onTimeout: () {
+
+      var authProvider = Provider.of<AuthProvider>(context, listen: false);
+      FireBaseUtils.addTaskToFireStore(task, authProvider.currentUser?.id ?? "")
+          .then((value) {
+        DialogUtils.hideLoading(context);
+        DialogUtils.showMessage(context, 'Task added successfully!!',
+            positiveActionName: 'ok', positiveAction: () {
+          Navigator.pop(context);
+        });
+      }).timeout(Duration(milliseconds: 500), onTimeout: () {
         Fluttertoast.showToast(
             msg: "Task added successfully",
             toastLength: Toast.LENGTH_SHORT,
@@ -138,7 +148,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
             backgroundColor: Colors.red,
             textColor: Colors.white,
             fontSize: 16.0);
-        provider.getAllTasksFromFireStore();
+        provider.getAllTasksFromFireStore(authProvider.currentUser?.id ?? '');
         Navigator.pop(context);
       });
     }

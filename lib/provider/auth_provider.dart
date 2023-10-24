@@ -1,0 +1,11 @@
+import 'package:flutter/material.dart';
+import '../model/myuser.dart';
+
+class AuthProvider extends ChangeNotifier {
+  MyUser? currentUser;
+
+  void updateUser(MyUser newUser) {
+    currentUser = newUser;
+    notifyListeners();
+  }
+}

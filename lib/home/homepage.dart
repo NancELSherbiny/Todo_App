@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/auth/login_page/login.dart';
 import 'package:todo/home/settings/settings_tab.dart';
 import 'package:todo/home/tasklist/addtaskbottomsheet.dart';
 import 'package:todo/home/tasklist/task_list_tap.dart';
@@ -25,6 +26,13 @@ class _HomePageState extends State<HomePage> {
           AppLocalizations.of(context)!.app_title,
           style: Theme.of(context).textTheme.titleLarge,
         ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, LoginPage.routeName);
+              },
+              icon: Icon(Icons.logout))
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
